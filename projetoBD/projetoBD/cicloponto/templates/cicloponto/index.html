@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{% static 'main.css' %}" />
+ 
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    
+<style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+      .controls {
+        margin-top: 10%;
+        margin-bottom: 15%;
+        border: 1px solid transparent;
+        border-radius: 2px 0 0 2px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        height: 32px;
+        outline: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+
+      #pac-input {
+        background-color: #fff;
+        padding: 0 11px 0 13px;
+        width: 400px;
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+        text-overflow: ellipsis;
+      }
+
+      #pac-input:focus {
+        border-color: #4d90fe;
+        margin-left: -1px;
+        padding-left: 14px;  /* Regular padding-left + 1. */
+        width: 401px;
+      }
+
+      .pac-container {
+        font-family: Roboto;
+      }
+
+      #type-selector {
+        color: #fff;
+        background-color: #4d90fe;
+        padding: 5px 11px 0px 11px;
+      }
+
+      #type-selector label {
+        font-family: Roboto;
+        font-size: 13px;
+        font-weight: 300;
+      }
+
+
+.navbar{
+  background-color: #000F2E;
+  height:12%;
+  position: absolute;
+}
+
+#footer{
+  height: 15%;
+
+}
+
+#logo{
+  padding-top: 0.80%;
+  padding-left: 88%;
+  
+  
+}
+
+#menu{
+  padding-left: 0;
+  padding-top: 0.70%;
+}
+
+.navbar-form{
+  padding-left: 35%;
+}
+
+body{
+  padding-top: 60px;
+}
+
+
+.dropdown-menu input {margin-top: -4px;
+}
+.dropdown-menu label {margin: 0;
+}
+
+#pesquisa{
+  border-radius: 0;
+}
+
+.btn{
+  border-radius: 0;
+}
+
+
+
+#footer{
+  padding-left: 45%;
+  padding-top:1.7%;
+}
+    </style>
+<head>
+<nav class="navbar navbar-default navbar-fixed-top">
+  <div class="container-fluid">
+    
+
+
+
+  <ul class="nav navbar-nav navbar-brand" id='menu' >
+      <li class="dropdown">
+
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"> <i class='glyphicon glyphicon-align-justify'></i> 
+          
+          <ul class="dropdown-menu" role="menu">
+            <form method="get">
+            <li> <a>
+          <label>
+            <input type="checkbox" name="museu">
+            Museus
+
+          </label>
+                 </a>
+            </li>
+            <li class="divider"></li>
+            <li><a> <label>
+            <input type="checkbox" name="mercado">
+            Mercados
+            </label> </a></li>
+          <li class="divider"></li>
+            <li><a> <label>
+            <input type="checkbox" name="igreja">
+            Igreja
+
+          </label></a></li>
+            <li><button type="submit">Filtrar</button></li>
+            </form>
+            </ul>
+            </li>
+</ul>
+
+ <form class="navbar-form navbar-left   " role="search">
+        <div class'row' >
+
+      <div class="form-group input-group-lg " >
+          <input type="text" class="form-control" placeholder="Encontre Rotas Turísticas" id='pesquisa'  name="pesquisa">
+      </div>
+          <button type="submit" class="btn btn-default btn-lg">Buscar</button>
+          <button onclick="location.href='http://localhost:8000/'" type="button" class="btn btn-default btn-lg">Limpar</button>
+    </div>
+      </form>
+
+    <div class='nav' id='logo'>
+  <a class='nav navbar-nav' href="BikeTour.html" >
+      <img  src="https://dl-web.dropbox.com/get/2014.1/Bike.png?_subject_uid=268881078&w=AAA6xn7RuuSqAIzm9-M9opJYDw9RNzXCifzXKDJTnjJP-Q">    </a>
+    </div>
+
+    
+  </div>
+</nav>
+</head>
+
+
+
+    <title>BikeTour</title>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true&libraries=places"></script>
+    <script>
+// This example adds a search box to a map, using the Google Place Autocomplete
+// feature. People can enter geographical searches. The search box will return a
+// pick list containing a mix of places and predicted search terms.
+
+var lastInfo = null;
+
+function loadInfoWin(map, marker, nome, descr) {
+  var contentString = 'Nome: ' + nome + "<div><label> Decrição:" + "" + descr + "</div></label>" ;
+
+  var infowindow = new google.maps.InfoWindow({
+      content: contentString,
+      maxWidth: 500
+  });
+
+  google.maps.event.addListener(marker, 'click', function() {
+    if (lastInfo != null) {
+      lastInfo.close();
+    }
+    lastInfo = infowindow;
+    infowindow.open(map, marker);
+  });
+}
+
+function initialize() {
+ 
+  var myLatlng = new google.maps.LatLng(-8.05784, -34.88290);
+  var mapOptions = {
+    zoom: 12,
+    center: myLatlng
+  }
+  var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+  {% if not filtro %}
+  {% for ponto in pontos %}
+    var marker = new google.maps.Marker({
+      position: new google.maps.LatLng({{ ponto.coordid.latitude|safe }}, {{ ponto.coordid.longitude|safe }}),
+      map: map
+    });
+    loadInfoWin(map, marker, '{{ ponto.nome_ponto|safe }}', '{{ ponto.descricao_ponto|safe }}');
+
+  {% endfor %}
+  {% endif %}
+
+  {% if resultados %}
+    loadMarkers({{ resultados|safe }}, map);
+  {% endif %}
+  
+
+
+}
+
+function loadMarkers(resultados, map) {
+  for (var i = 0; i < resultados.length; i++) {
+    var marker = new google.maps.Marker({
+      position: new google.maps.LatLng(resultados[i].latitude, resultados[i].longitude),
+      map: map
+    });
+    loadInfoWin(map, marker, resultados[i].nome_ponto, resultados[i].descricao_ponto);
+  }
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+    <style>
+      #target {
+        width: 345px;
+      }
+    </style>
+  
+  <body>
+
+        
+    <div id="map-canvas"></div>
+  
+<footer class='navbar navbar-default navbar-fixed-bottom' id='footer'>
+  <nav class='container' role='navigation'>
+    <div class='navbar-Footer' >
+
+      <a href='www.cin.ufpe.br' class='navbar'>CIN-UFPE</a>
+    </div>
+  </nav>
+</footer>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  </body>
+</html>
